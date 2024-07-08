@@ -1,0 +1,69 @@
+services:
+  postgres:
+    container_name: postgres-db
+    image: postgres:12.19-alpine3.20
+    environment:
+      POSTGRES_USER: sa
+      POSTGRES_PASSWORD: strongpassword!
+      PGDATA: data/postgres
+#      listen_addresses: *
+    volumes:
+      #      - db: data/postgres
+      - type: tmpfs
+        target: /var/data/postgres
+    networks:
+      - course-online
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  mysql:
+    container_name: mysql-db
+    image: mysql:lts-oraclelinux9
+    command: mysqld --mysql-native-password=ON
+    ports:
+      - "3306:3306"
+    environment:
+#      MYSQL_USER: sa
+      MYSQL_ROOT_PASSWORD: strongpassword!
+    networks:
+      - course-online
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - type: tmpfs
+        target: /var/data/postgres
+    ports:
+      - "5050:80"
+    networks:
+      - course-online
+    restart: unless-stopped
+
+  course-online-be:
+    container_name: course-online-be
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    depends_on:
+      postgres:
+          condition: service_healthy
+          restart: true
+    restart: unless-stopped
+    environment:
+      WAIT_HOSTS: postgres:5432
+      variables.database.url: jdbc:postgresql://postgres/course_online
+    networks:
+      - course-online
+
+networks:
+  course-online:
+    driver: bridge
