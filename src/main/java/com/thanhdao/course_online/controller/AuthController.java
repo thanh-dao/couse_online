@@ -1,5 +1,6 @@
 package com.thanhdao.course_online.controller;
 
+import com.thanhdao.course_online.anotations.V1RestController;
 import com.thanhdao.course_online.dto.user.request.RegisterRequest;
 import com.thanhdao.course_online.entity.User;
 import com.thanhdao.course_online.service.UserService;
@@ -15,8 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 
-@RestController
-@RequestMapping("auth")
+@V1RestController("auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final UserService userService;
